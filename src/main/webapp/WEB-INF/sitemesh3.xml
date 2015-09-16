@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- sitemesh 3.x -->
+<sitemesh>
+	<!-- 装饰所有页面 -->
+	<mapping decorator="/decorators/cms-frame.jsp"/>
+	
+	<!-- 排除不需要装饰的页面 -->
+	<!-- 
+		需要配合 访问的url和jsp才能排除WEB-INF下的jsp
+		？？？？？？？？？？？？？？？？？？？？？？
+	 -->
+	<mapping path="/login" exclude="true"/>
+	<mapping path="/WEB-INF/jsp/login.jsp" exclude="true"/>
+	<!-- ？？？？？？？？？？？？？？？？？？？？？？ -->
+
+	<mapping path="/login.jsp" exclude="true"/>
+
+	<mapping path="/resources/plugins/ueditor1.4/jsp/controller.jsp" exclude="true"/>
+</sitemesh>

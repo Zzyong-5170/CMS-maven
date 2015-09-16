@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cosmos.cms.common.web.dao.I.ResourcesTreeDAOI">
+
+	<select id="getResourcesTreeData" parameterType="string" resultType="resourcesTreeModel">
+		SELECT
+			sys_resources.sys_resources_id id,
+			sys_resources.sys_resources_parent_id parentId,
+			sys_resources.sys_resources_name name
+		FROM
+			sys_resources
+		WHERE
+			1 = 1
+		<if test="!''.equals(id) and id != null">
+			AND	sys_resources.sys_resources_parent_id = #{id}
+		</if>
+	</select>
+
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cosmos.weixin.common.web.dao.I.WXDAOI">
+
+	<select id="getAccessTokens" parameterType="string" resultType="accessTokenModel">
+		SELECT
+			wx_access_token.wx_access_token_value accessTokenValue,
+			wx_access_token.wx_access_token_expires_time accessTokenExpiresTime,
+			wx_access_token.wx_access_token_add_time accessTokenAddTime
+		FROM
+			wx_access_token
+	</select>
+
+	<insert id="save" parameterType="accessTokenModel">
+		INSERT INTO wx_access_token (
+			`id`,
+			`wx_access_token_id`,
+			`wx_access_token_value`,
+			`wx_access_token_expires_time`,
+			`wx_access_token_add_time`
+		)
+		VALUES (
+			#{accessTokenEntity.id},
+			#{accessTokenEntity.accessTokenId},
+			#{accessTokenEntity.accessTokenValue},
+			#{accessTokenEntity.accessTokenExpiresTime},
+			#{accessTokenEntity.accessTokenAddTime}
+		)
+	</insert>
+
+	<update id="update" parameterType="accessTokenModel">
+		UPDATE wx_access_token
+		SET
+			wx_access_token_value = #{accessTokenEntity.accessTokenValue},
+			wx_access_token_expires_time = #{accessTokenEntity.accessTokenExpiresTime},
+			wx_access_token_add_time = #{accessTokenEntity.accessTokenAddTime}
+		WHERE
+			wx_access_token_id = #{accessTokenEntity.accessTokenId}
+	</update>
+</mapper>

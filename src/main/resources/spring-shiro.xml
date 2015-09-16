@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+			http://www.springframework.org/schema/util
+			http://www.springframework.org/schema/util/spring-util-4.0.xsd
+			http://www.springframework.org/schema/aop
+			http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+
+	<!-- 配置shiro 使用ehcache缓存 -->
+	<bean id="ehcacheManage" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+		<property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/>
+	</bean>
+	<!-- 
+		passwordService=org.apache.shiro.authc.credential.DefaultPasswordService  
+		hashService=org.apache.shiro.crypto.hash.DefaultHashService  
+		passwordService.hashService=$hashService  
+		hashFormat=org.apache.shiro.crypto.hash.format.Shiro1CryptFormat  
+		passwordService.hashFormat=$hashFormat  
+		hashFormatFactory=org.apache.shiro.crypto.hash.format.DefaultHashFormatFactory  
+		passwordService.hashFormatFactory=$hashFormatFactory
+	 -->
+	<bean id="hashService" class="org.apache.shiro.crypto.hash.DefaultHashService"/>
+	<bean id="hashFormat" class="org.apache.shiro.crypto.hash.format.Shiro1CryptFormat"/>
+	<bean id="hashFormatFactory" class="org.apache.shiro.crypto.hash.format.DefaultHashFormatFactory"/>
+	<bean id="passwordService" class="org.apache.shiro.authc.credential.DefaultPasswordService">
+		<property name="hashService" ref="hashService"/>
+		<property name="hashFormat" ref="hashFormat"/>
+		<property name="hashFormatFactory" ref="hashFormatFactory"/>
+	</bean>
+	<!-- 密码加密处理 -->
+	<bean id="passwordMatcher" class="org.apache.shiro.authc.credential.PasswordMatcher">
+		<property name="passwordService" ref="passwordService"/>
+	</bean>
+	<!-- 自定义域 -->
+	<bean id="sysUserRealm" class="cosmos.cms.common.shiro.SysUserRealm">
+		<property name="passwordService" ref="passwordService"/>
+		<property name="credentialsMatcher" ref="passwordMatcher"/>
+		<property name="cachingEnabled" value="true" />
+		<property name="authenticationCachingEnabled" value="true" />
+		<!-- ehcache.xml 中的配置的cache的名称 -->
+		<property name="authenticationCacheName" value="myCache" />
+		<property name="authorizationCachingEnabled" value="true" />
+		<!-- ehcache.xml 中的配置的cache的名称 -->
+		<property name="authorizationCacheName" value="myCache" />
+		<property name="resourcesCachingEnabled" value="true"/>
+		<property name="resourcesCacheName" value="myCache" />
+	</bean>
+	<!-- 
+		 会话管理
+		 native session:
+		     DefaultWebSessionManager为shiro管理的session，通过该类，可以将session全部交付给
+		     shiro来进行管理，要使用shiro本身来管理session需要覆盖DefaultWebSecurityManager
+		     默认的sessionManager（ServletContainerSession）。
+		 servlet container session:
+		     ServletContainerSession,该类是依赖容器（比如servlet）的session管理机制来处理session，
+		     所有如果想要配置session的超时时间，则需要在web.xml中配置session-config。
+	-->
+	<!-- <bean id="nativeSessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+		<property name="globalSessionTimeout" value="30000"/> 设置session超时时间为30秒
+	</bean> -->
+	<!-- shiro 核心部件注入 -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realms">
+			<list>
+				<ref bean="sysUserRealm"/>
+			</list>
+		</property>
+		<property name="cacheManager" ref="ehcacheManage" />
+		<!-- <property name="sessionManager" ref="nativeSessionManager"/> -->
+	</bean>
+
+	<bean
+		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="staticMethod"
+			value="org.apache.shiro.SecurityUtils.setSecurityManager" />
+		<property name="arguments" ref="securityManager" />
+	</bean>
+
+	<!-- Shiro的Web过滤器 -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<!-- <property name="filters">
+			<util:map>
+				<entry key="user" value-ref="userFilter" />
+			</util:map>
+		</property> -->
+		<property name="filterChainDefinitions">
+			<value>
+				
+			</value>
+		</property>
+	</bean>
+	<!-- 权限注解 aop -->
+	<bean class=" org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">  
+		<property name="securityManager" ref="securityManager"/>  
+	</bean>
+	<!-- shiro 生命周期管理 -->
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+</beans>

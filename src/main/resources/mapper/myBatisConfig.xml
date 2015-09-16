@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<!-- 资源实体类别名 -->
+		<typeAlias alias="resourcesModel" type="cosmos.cms.common.web.model.ResourcesModel"/>
+		<!-- 系统用户实体类别名 -->
+		<typeAlias alias="sysUserModel" type="cosmos.cms.common.web.model.SysUserModel"/>
+		<!-- 树实体类别名 -->
+		<typeAlias alias="resourcesTreeModel" type="cosmos.cms.common.web.model.ResourcesTreeModel"/>
+		<!-- access_token实体类别名 -->
+		<typeAlias alias="accessTokenModel" type="cosmos.weixin.common.web.model.AccessTokenModel"/>
+	</typeAliases>
+</configuration>

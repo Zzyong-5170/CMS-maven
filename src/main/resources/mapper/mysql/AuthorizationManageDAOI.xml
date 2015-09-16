@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cosmos.cms.common.web.dao.I.AuthorizationManageDAOI">
+
+	<select id="getSysUsersResources" parameterType="string" resultType="resourcesModel">
+		SELECT
+			sys_resources.sys_resources_id sysResourcesId,
+			sys_resources.sys_resources_name sysResourcesName,
+			sys_resources.sys_resources_url sysResourcesUrl,
+			sys_resources.sys_resources_parent_id sysResourcesParentId,
+			sys_resources.sys_resources_permission sysResourcesPermission,
+			sys_resources.sys_resources_icon sysResourcesIcon,
+			sys_resources.sys_resources_seq sysResourcesSeq
+		FROM
+			sys_users
+		LEFT JOIN sys_users_roles ON sys_users.sys_users_id = sys_users_roles.sys_users_id
+		LEFT JOIN sys_roles ON sys_users_roles.sys_roles_id = sys_roles.sys_roles_id
+		LEFT JOIN sys_roles_resources ON sys_roles.sys_roles_id = sys_roles_resources.sys_roles_id
+		LEFT JOIN sys_resources ON sys_roles_resources.sys_resources_id = sys_resources.sys_resources_id
+		WHERE
+			sys_users.sys_users_name = #{username}
+	</select>
+
+	<select id="getSysUsersResourcesPermissions" parameterType="string" resultType="string">
+		SELECT
+			sys_resources.sys_resources_permission sysResourcesPermission
+		FROM
+			sys_users
+		LEFT JOIN sys_users_roles ON sys_users.sys_users_id = sys_users_roles.sys_users_id
+		LEFT JOIN sys_roles ON sys_users_roles.sys_roles_id = sys_roles.sys_roles_id
+		LEFT JOIN sys_roles_resources ON sys_roles.sys_roles_id = sys_roles_resources.sys_roles_id
+		LEFT JOIN sys_resources ON sys_roles_resources.sys_resources_id = sys_resources.sys_resources_id
+		WHERE
+			sys_users.sys_users_name = #{username}
+	</select>
+
+	<select id="getIdentifiedInfo" parameterType="string" resultType="sysUserModel">
+		SELECT
+			sys_users.sys_users_name sysName,
+			sys_users.sys_users_password sysPassword
+		FROM
+			sys_users
+		WHERE
+			sys_users.sys_users_name = #{username}
+	</select>
+
+</mapper>

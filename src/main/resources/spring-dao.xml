@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="
+							http://www.springframework.org/schema/beans
+							http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+							http://www.springframework.org/schema/tx
+							http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+							http://www.springframework.org/schema/aop
+							http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+							http://www.springframework.org/schema/context
+							http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+	<!--
+	声明式事务
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true"/>
+			<tx:method name="*" rollback-for="Exception"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<aop:config>
+		<aop:pointcut id="pointcut" expression="execution(* *(..))"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut"/>
+	</aop:config>
+	 -->
+
+	<!-- 引入外部属性文件 -->
+	<context:property-placeholder location="classpath:db.properties"/>
+
+	<!-- 配置数据库数据源
+		 该数据源存在mysql 8 小时问题
+		mysql在默认情况下，如果发现一个连接的空闲时间超过8小时，将会在数据库端关闭这个连接。而数据源并不知道这个连接已经被关闭了，
+		当它将这个无用的连接返回给某个DAO时，DAO就会爆无法获取Connection的异常。
+		两种解决8小时问题的方案：
+			1.
+			<property name="validationQuery" value="select 1"/>
+			<property name="testOnBorrow" value="true"/> 
+			// 这种方式，数据源在将连接交给DAO前，会事先检测这个连接的是否是好的，
+			// 如果每次将连接交给DAO时都检测这个连接的有效性，在高并发的应用中将会带来性能的问题，因为他会需要更多的数据库访问请求。
+			
+			2.
+			<property name="validationQuery" value="select 1"/>
+			<property name="testOnBorrow" value="false"/>
+			<property name="testWhileIdle" value="true"/>
+			<property name="timeBetweenEvictionRunsMillis" value="3600000"/>
+			// 这种方式DBCP将通过一个后台线程定时对空闲连接进行检测，当发现无用的空闲连接时（那些被数据库关闭的链接），
+			// 就会将他们清除掉，只要将timeBetweenEvictionRunsMillis设置为小于8小时即可。
+	 -->
+	<!-- <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${mysql.db.driver}" />
+		<property name="url" value="${mysql.db.url}" />
+		<property name="username" value="${mysql.db.username}" />
+		<property name="password" value="${mysql.db.password}" />
+		<property name="validationQuery" value="select 1"/>
+		<property name="testOnBorrow" value="false"/>
+		<property name="testWhileIdle" value="true"/>
+		<property name="timeBetweenEvictionRunsMillis" value="3600000"/>
+	</bean> -->
+
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+		<property name="driverClassName" value="${mysql.db.driver}"/>
+		<property name="url" value="${mysql.db.url}"/>
+		<property name="username" value="${mysql.db.username}"/>
+		<property name="password" value="${mysql.db.password}"/>
+
+        <property name="initialSize" value="1" /><!-- 初始化连接数量 -->  
+        <property name="maxActive" value="20" /><!-- 最大并发连接数 -->
+        <property name="minIdle" value="10" /><!-- 最小空闲连接数 -->
+        <property name="maxWait" value="60000" /><!-- 获取连接等待超时时间 -->
+
+		<property name="validationQuery" value="select 1" /><!-- 用来检测连接是否是有效的sql，要求是一个查询语句。如果validationQuery为null，testOnBorrow、testOnReturn、testWhileIdle都不会其作用。 -->  
+        <property name="testOnBorrow" value="true" /><!-- 申请连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能。 -->
+        <property name="testOnReturn" value="true" /><!-- 归还连接时执行validationQuery检测连接是否有效，做了这个配置会降低性能 -->
+        <property name="testWhileIdle" value="true" /><!-- 不影响性能，并且保证安全性。申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效 -->
+        
+        <property name="removeAbandoned" value="true"/><!-- 超时时间是否回收 -->
+        <property name="removeAbandonedTimeout" value="180"/><!-- 超时时间限制多长 -->
+        <property name="timeBetweenEvictionRunsMillis" value="300000"/><!-- 1) Destroy线程会检测连接的间隔时间 2) testWhileIdle的判断依据 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒  -->
+
+		<!-- <property name="poolPreparedStatements" value="false"/>
+		<property name="maxOpenPreparedStatements" value="100"/> cache问题-->
+		
+		<property name="filters" value="stat"/><!--配置扩展插件 监控统计：stat； 日志：log4j；防御sql注入：wall -->
+	</bean>
+
+	<!-- 引入jdbcTemplate模板 -->
+	<!-- <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource"/>
+	</bean> -->
+
+	<!-- mybatis配置 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:mapper/myBatisConfig.xml"/>
+		<property name="mapperLocations" value="classpath:mapper/mysql/*.xml"/>
+	</bean>
+	<!-- 将映射接口转换为spring中的bean -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="annotationClass" value="org.springframework.stereotype.Repository" />
+		<property name="basePackage" value="cosmos.cms.common.web.dao.I,cosmos.weixin.common.web.dao.I" />
+	</bean>
+	<!-- mybatis配置 -->
+	
+	<!-- 配置事物管理器 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+
+	<!-- 开启注解事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+
+</beans>

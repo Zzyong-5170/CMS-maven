@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+							http://www.springframework.org/schema/beans
+							http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+							http://www.springframework.org/schema/context
+							http://www.springframework.org/schema/context/spring-context-4.0.xsd
+							http://www.springframework.org/schema/mvc
+							http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+							http://www.springframework.org/schema/util
+							http://www.springframework.org/schema/util/spring-util-4.0.xsd
+							http://www.springframework.org/schema/aop
+							http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+
+	<!-- 引入外部属性文件 -->
+	<context:property-placeholder location="classpath:view.properties"/>
+	<!-- <util:properties location=""></util:properties> -->
+
+	<!-- 扫描注解包 -->	
+	<context:component-scan base-package="cosmos">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+	</context:component-scan>
+	
+	<!-- 配置视图解析器,该视图不负责具体的解析，只负责协商，并应有最高的解析顺序-->
+	<!-- 通过后缀匹配MIME -->
+	<!-- <bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver"
+		p:defaultContentType="text/html"
+		p:favorPathExtension="true"
+		p:favorParameter="false"
+		p:parameterName="format"> -->
+	<!-- 通过参数匹配MIME -->
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver"
+		p:defaultContentType="text/html"
+		p:favorPathExtension="false"
+		p:favorParameter="true"
+		p:parameterName="format">
+		<!-- 
+			上面的参数配置支持请求后缀匹配MIME类型，不支持参数传递方式, 默认情况下或者在找不到匹配类型的情况下也会对应使用默认的MIME类型匹配
+			MIME类型映射列表
+		 -->
+		<property name="mediaTypes">
+			<map>
+				<entry key="html" value="text/html"/>
+				<entry key="json" value="application/json"/>
+			</map>
+		</property>
+		<property name="defaultViews">
+			<list>
+				<bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
+			</list>
+		</property>
+	</bean>
+
+	<!-- jsp视图配置 -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+		p:viewClass="org.springframework.web.servlet.view.JstlView"
+		p:prefix="${view.prefix}"
+		p:suffix="${view.suffix}"/>
+
+	<!-- register HandlerMapping HandlerAdapter HandlerExceptionResolver -->
+	<mvc:annotation-driven/>
+
+	<!-- <mvc:default-servlet-handler/> -->
+	<!-- 通过spring处理静态资源 -->
+	<mvc:resources location="${resources.location}" mapping="${resources.mapping}" cache-period="${resources.cache.period}" />
+
+	<!-- 全局异常处理 -->
+	<bean id="authenticationExceptionHandler" class="cosmos.cms.common.exception.handler.impl.AuthenticationExceptionHandler"/>
+	<aop:config proxy-target-class="true"></aop:config>
+</beans>
